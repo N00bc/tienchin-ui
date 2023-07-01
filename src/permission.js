@@ -29,12 +29,16 @@ router.beforeEach((to, from, next) => {
         if (to.path === '/login') {
             next({path: '/'})
             NProgress.done()
-        } else {
+        }
+        //
+        else {
+            // Pinia中无用户角色信息
             if (useUserStore().roles.length === 0) {
                 isRelogin.show = true
                 // 判断当前用户是否已拉取完user_info信息
                 useUserStore().getInfo().then(() => {
                     isRelogin.show = false
+                    // 加载动态路由信息
                     usePermissionStore().generateRoutes().then(accessRoutes => {
                         // 根据roles权限生成可访问的路由表
                         accessRoutes.forEach(route => {
@@ -54,12 +58,16 @@ router.beforeEach((to, from, next) => {
                 next()
             }
         }
-    } else {
-        // 没有token
+    }
+    // 没有token
+    else {
+        // 没有token 没有登录
         if (whiteList.indexOf(to.path) !== -1) {
             // 在免登录白名单，直接进入
             next()
-        } else {
+        }
+        // 用户在未登录状态但访问需要登录的页面
+        else {
             next(`/login?redirect=${to.fullPath}`) // 否则全部重定向到登录页
             NProgress.done()
         }
