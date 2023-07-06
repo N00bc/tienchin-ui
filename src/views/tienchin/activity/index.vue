@@ -294,7 +294,7 @@ const data = reactive({
 
 const {queryParams, form, rules} = toRefs(data);
 
-/** 查询岗位列表 */
+/** 查询活动列表 */
 function getList() {
   loading.value = true;
   listActivity(queryParams.value).then(response => {
@@ -358,7 +358,7 @@ function handleAdd() {
   // 获取channelId 和 channelName对应关系
   handleChannelList();
   open.value = true;
-  title.value = "添加岗位";
+  title.value = "添加活动";
 }
 
 /** 修改按钮操作 */
