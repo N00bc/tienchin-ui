@@ -24,7 +24,6 @@
               :value="type.value"/>
         </el-select>
       </el-form-item>
-
       <el-form-item label="适用人群" prop="apply">
         <el-select
             v-model="queryParams.apply"
