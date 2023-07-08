@@ -1,5 +1,6 @@
 import request from '@/utils/request'
 
+// 获取渠道
 export function listChannels() {
     return request({
         url: '/tienchin/clue/channel',
@@ -7,6 +8,7 @@ export function listChannels() {
     })
 }
 
+// 获取活动
 export function listActivities(channelId) {
     return request({
         url: '/tienchin/clue/activity/' + channelId,
@@ -14,6 +16,7 @@ export function listActivities(channelId) {
     })
 }
 
+// 新增线索
 export function addClue(data) {
     return request({
         url: "/tienchin/clue",
@@ -22,9 +25,18 @@ export function addClue(data) {
     })
 }
 
+// 列出线索列表
 export function listClue() {
     return request({
         url: "/tienchin/clue/list",
+        method: 'get'
+    })
+}
+
+//
+export function listUserList(deptId) {
+    return request({
+        url: '/tienchin/clue/users/' + deptId,
         method: 'get'
     })
 }
