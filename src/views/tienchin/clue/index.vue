@@ -124,14 +124,14 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
-                     v-hasPermi="['tienchin:clue:edit']">修改
+          <el-button link type="primary" icon="View" @click="handleClueView(scope.row)"
+                     v-hasPermi="['tienchin:clue:view']">查看
           </el-button>
-          <el-button link type="primary" icon="Pointer" @click="handleAssign(scope.row)"
+          <el-button link type="primary" icon="Pointer" @click="handleClueAssign(scope.row)"
                      v-hasPermi="['tienchin:clue:edit']">分配
           </el-button>
-          <el-button link type="primary" icon="DArrowRight" @click="handleDelete(scope.row)"
-                     v-hasPermi="['tienchin:clue:remove']">跟进
+          <el-button link type="primary" icon="DArrowRight" @click="handleClueFollow(scope.row)"
+                     v-hasPermi="['tienchin:clue:follow']">跟进
           </el-button>
         </template>
       </el-table-column>
@@ -146,7 +146,7 @@
     />
     <!-- 分配线索对话框 -->
     <el-dialog title="分配线索" v-model="assignClueOpen" width="600px" append-to-body>
-      <el-form ref="assignClueRef" :model="form" :rules="rules" label-width="80px">
+      <el-form ref="assignClueRef" :model="assignForm" :rules="assignRules" label-width="80px">
         <!--        <el-row>-->
         <!--          <el-col :span="12">-->
         <!--            <el-form-item label="客户姓名" prop="customerName">-->
@@ -161,7 +161,7 @@
         <!--        </el-row>-->
         <el-row>
           <el-col :span="12">
-            <el-form-item label="归属部门" prop="assignForm.deptId">
+            <el-form-item label="归属部门" prop="deptId">
               <el-tree-select v-model="assignForm.deptId" :data="deptOptions"
                               :props="{ value: 'id', label: 'label', children: 'children' }" value-key="id"
                               @change="deptChange"
@@ -185,6 +185,12 @@
           </el-col>
         </el-row>
       </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="handleClueFormSubmit">确认分派</el-button>
+          <el-button @click="cancelClueAssign">取消分派</el-button>
+        </div>
+      </template>
     </el-dialog>
     <!-- 添加或修改线索对话框 -->
     <el-dialog :title="title" v-model="open" width="600px" append-to-body>
@@ -283,11 +289,13 @@
 
 <script setup name="Clue">
 import {addCourse, deleteCourse, getCourse, listCourse, updateCourse} from "@/api/tienchin/course";
-import {listActivities, listChannels, addClue, listClue, listUserList} from "@/api/tienchin/clue";
+import {listActivities, listChannels, addClue, listClue, listUserList, assignClue} from "@/api/tienchin/clue";
 import {deptTreeSelect} from "@/api/system/user";
 
+const router = useRouter();
 const {proxy} = getCurrentInstance();
 const {sys_user_sex, clue_status} = proxy.useDict("sys_user_sex", "clue_status");
+
 
 const clueList = ref([]);
 const channelList = ref([]);
@@ -319,10 +327,14 @@ const data = reactive({
   rules: {
     customerName: [{required: true, message: "客户姓名不能为空", trigger: "blur"}],
     phoneNumber: [{required: true, message: "客户手机号不能为空", trigger: "blur"}]
+  },
+  assignRules: {
+    deptId: [{required: true, message: "部门不能为空", trigger: "blur"}],
+    nickName: [{required: true, message: "员工不能为空", trigger: "blur"}]
   }
 });
-
-const {queryParams, form, assignForm, rules} = toRefs(data);
+// data中的对象需要到此处声明
+const {queryParams, form, assignForm, rules, assignRules} = toRefs(data);
 
 /** 查线索位列表 */
 function getList() {
@@ -356,7 +368,7 @@ function initUserList(deptId) {
   })
 }
 
-/** 赋值操作  */
+/** 打开表单时赋值操作  */
 function assignUserChange(data) {
   assignForm.value.nickName = data.nickName
   assignForm.value.userId = data.userId
@@ -364,10 +376,41 @@ function assignUserChange(data) {
   assignForm.value.deptId = data.deptId
 }
 
+/** 提交分派记录操作 */
+function handleClueFormSubmit() {
+  proxy.$refs["assignClueRef"].validate(valid => {
+    if (valid) {
+      assignClue(assignForm.value).then(response => {
+        proxy.$modal.msgSuccess("修改成功");
+        resetAssignClue();
+        assignClueOpen.value = false;
+        getList();
+      })
+    }
+  });
+}
+
+/** 取消分派操作 */
+function cancelClueAssign() {
+  assignClueOpen.value = false;
+  // 重置分派表单
+  resetAssignClue();
+}
+
 /** 取消按钮 */
 function cancel() {
   open.value = false;
-  reset();
+  reset()
+}
+
+/** 重置分派对话框操作 */
+function resetAssignClue() {
+  assignForm.value = {
+    deptId: undefined,
+    userId: undefined,
+    nickName: undefined,
+    userName: undefined
+  }
 }
 
 /** 表单重置 */
@@ -427,8 +470,17 @@ function handleUpdate(row) {
   });
 }
 
+/** 查看线索按钮操作 */
+function handleClueView(data) {
+  router.push("/clue/details/index/" + data.clueId + "/view")
+}
+/** 查看线索按钮操作 */
+function handleClueFollow(data) {
+  router.push("/clue/details/index/" + data.clueId + "/follow")
+}
+
 /** 分配按钮操作 */
-function handleAssign(row) {
+function handleClueAssign(row) {
   // 显示对话框
   assignClueOpen.value = true;
   // 初始化部门信息

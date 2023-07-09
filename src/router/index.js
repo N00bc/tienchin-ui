@@ -157,7 +157,21 @@ export const dynamicRoutes = [
                 meta: {title: '修改生成配置', activeMenu: '/tool/gen'}
             }
         ]
-    }
+    },
+    {
+        path: '/clue/details',
+        component: Layout,
+        hidden: true,
+        permissions: ['tienchin:clue:view','tienchin:clue:assign'],
+        children: [
+            {
+                path: 'index/:clueId(\\d+)/:type(\\S+)', // /clue/details/index/{clueId}/{type}
+                component: () => import('@/views/tienchin/clue/ClueDetails.vue'),
+                name: 'ClueDetails',
+                meta: {title: '线索详情', activeMenu: '/clue'} //activeMenu: 激活菜单
+            }
+        ]
+    },
 ]
 
 const router = createRouter({

@@ -33,10 +33,28 @@ export function listClue() {
     })
 }
 
-//
+// 展示部门用户
 export function listUserList(deptId) {
     return request({
         url: '/tienchin/clue/users/' + deptId,
+        method: 'get'
+    })
+}
+
+// 创建分派线索
+export function assignClue(data) {
+    return request({
+        url: '/tienchin/assign',
+        method: 'post',
+        data: data
+    })
+}
+
+// ---------------------------- ClueDetails ----------------------------
+// 根据线索id获取详细线索信息
+export function getClueById(clueId) {
+    return request({
+        url: '/tienchin/clue/' + clueId,
         method: 'get'
     })
 }
