@@ -58,3 +58,29 @@ export function getClueById(clueId) {
         method: 'get'
     })
 }
+
+// 更新线索信息
+export function updateClueDetails(data) {
+    return request({
+        url: '/tienchin/clue/follow',
+        method: 'put',
+        data: data
+    })
+}
+
+// 查询线索的跟进记录
+export function getFollowRecordByClueId(clueId) {
+    return request({
+        url: '/tienchin/clue/follow/record/' + clueId,
+        method: 'get'
+    })
+}
+
+//
+export function invalidClue(data) {
+    return request({
+        url: '/tienchin/clue/invalidate',
+        method: 'put',
+        data: data
+    })
+}
