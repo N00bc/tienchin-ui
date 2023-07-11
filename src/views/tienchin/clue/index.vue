@@ -2,48 +2,65 @@
   <div class="app-container">
     <!--顶部搜索区-->
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch">
-      <el-form-item label="线索名称" prop="courseName">
+      <el-form-item label="客户名" prop="customerName">
         <el-input
-            v-model="queryParams.courseName"
-            placeholder="请输入线索名称"
+            v-model="queryParams.customerName"
+            placeholder="请输入客户名"
             clearable
             style="width: 200px"
             @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="线索类型" prop="type">
+      <el-form-item label="线索状态" prop="status">
         <el-select
-            v-model="queryParams.type"
-            placeholder="请选择线索类型"
+            v-model="queryParams.status"
+            placeholder="请选择线索状态"
             clearable
             style="width: 200px">
           <el-option
-              v-for="type in course_type"
-              :key="type.value"
-              :label="type.label"
-              :value="type.value"/>
+              v-for="status in clue_status"
+              :key="status.value"
+              :label="status.label"
+              :value="status.value"/>
         </el-select>
       </el-form-item>
-      <el-form-item label="适用人群" prop="apply">
-        <el-select
-            v-model="queryParams.apply"
-            placeholder="请选择适用人群"
-            clearable
-            style="width: 200px">
+      <el-form-item label="客户手机号" prop="phoneNumber">
+        <el-input v-model="queryParams.phoneNumber" placeholder="请输入客户手机号" clearable/>
+      </el-form-item>
+      <el-form-item label="线索归属人" prop="owner">
+        <el-select v-model="queryParams.owner"
+                   placeholder="请选择线索归属人"
+                   clearable
+                   style="width: 240px">
           <el-option
-              v-for="applyTo in course_apply"
-              :key="applyTo.value"
-              :label="applyTo.label"
-              :value="parseInt(applyTo.value)"/>
+              v-for="(owner,index) in ownerList"
+              :key="index"
+              :value="owner"
+              :label="owner"/>
         </el-select>
       </el-form-item>
-      <el-form-item label="最低价格" prop="minPrice">
-        <el-input-number placeholder="最低价格" @keyup.enter="handleQuery" clearable v-model="queryParams.minPrice"
-                         :precision="2" :step="100" :min="0"/>
+      <el-form-item label="渠道来源" prop="channelId">
+        <el-select v-model="queryParams.channelId"
+                   placeholder="请选择渠道来源"
+                   clearable
+                   style="width: 240px">
+          <el-option
+              v-for="channel in channelList"
+              :key="channel.channelId"
+              :value="channel.channelId"
+              :label="channel.channelName"/>
+        </el-select>
       </el-form-item>
-      <el-form-item label="最高价格" prop="maxPrice">
-        <el-input-number placeholder="最高价格" @keyup.enter="handleQuery" clearable v-model="queryParams.maxPrice"
-                         :precision="2" :step="100" :min="0"/>
+      <el-form-item label="跟进时间">
+        <el-date-picker
+            v-model="queryParams.dateRange"
+            value-format="YYYY-MM-DD hh:mm:ss"
+            format="YYYY-MM-DD hh:mm:ss"
+            type="datetimerange"
+            range-separator="-"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+        ></el-date-picker>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -58,7 +75,7 @@
             plain
             icon="Plus"
             @click="handleAdd"
-            v-hasPermi="['tienchin:course:add']"
+            v-hasPermi="['tienchin:clue:add']"
         >新增
         </el-button>
       </el-col>
@@ -69,7 +86,7 @@
             icon="Edit"
             :disabled="single"
             @click="handleUpdate"
-            v-hasPermi="['tienchin:course:edit']"
+            v-hasPermi="['tienchin:clue:edit']"
         >修改
         </el-button>
       </el-col>
@@ -80,7 +97,7 @@
             icon="Delete"
             :disabled="multiple"
             @click="handleDelete"
-            v-hasPermi="['tienchin:course:remove']"
+            v-hasPermi="['tienchin:clue:remove']"
         >删除
         </el-button>
       </el-col>
@@ -90,7 +107,7 @@
             plain
             icon="Download"
             @click="handleExport"
-            v-hasPermi="['tienchin:course:export']"
+            v-hasPermi="['tienchin:clue:export']"
         >导出
         </el-button>
       </el-col>
@@ -102,7 +119,7 @@
       <el-table-column label="线索编号" align="center" prop="clueId" width="80" :show-overflow-tooltip="true"/>
       <el-table-column label="客户姓名" align="center" prop="customerName" width="120" :show-overflow-tooltip="true"/>
       <el-table-column label="客户手机号" align="center" prop="phoneNumber" width="120" :show-overflow-tooltip="true"/>
-      <el-table-column label="线索类型" align="center" prop="type" width="120" :show-overflow-tooltip="true">
+      <el-table-column label="线索状态" align="center" prop="status" width="120" :show-overflow-tooltip="true">
         <template #default="scope">
           <dict-tag :options="clue_status" :value="scope.row.status">
             {{ scope.row }}
@@ -127,10 +144,13 @@
           <el-button link type="primary" icon="View" @click="handleClueView(scope.row)"
                      v-hasPermi="['tienchin:clue:view']">查看
           </el-button>
-          <el-button link type="primary" icon="Pointer" @click="handleClueAssign(scope.row)"
+          <el-button link v-if="scope.row.status == 1"
+                     type="primary" icon="Pointer" @click="handleClueAssign(scope.row)"
                      v-hasPermi="['tienchin:clue:edit']">分配
           </el-button>
-          <el-button link type="primary" icon="DArrowRight" @click="handleClueFollow(scope.row)"
+          <el-button link v-if="scope.row.owner == userStore.name &&(scope.row.status == 1 || scope.row.status == 2)"
+                     type="primary" icon="DArrowRight"
+                     @click="handleClueFollow(scope.row)"
                      v-hasPermi="['tienchin:clue:follow']">跟进
           </el-button>
         </template>
@@ -147,18 +167,6 @@
     <!-- 分配线索对话框 -->
     <el-dialog title="分配线索" v-model="assignClueOpen" width="600px" append-to-body>
       <el-form ref="assignClueRef" :model="assignForm" :rules="assignRules" label-width="80px">
-        <!--        <el-row>-->
-        <!--          <el-col :span="12">-->
-        <!--            <el-form-item label="客户姓名" prop="customerName">-->
-        <!--              <el-input v-model="form.customerName" placeholder="请输入客户姓名"></el-input>-->
-        <!--            </el-form-item>-->
-        <!--          </el-col>-->
-        <!--          <el-col :span="12">-->
-        <!--            <el-form-item label="手机号" prop="phoneNumber">-->
-        <!--              <el-input v-model="form.phoneNumber" placeholder="请输入用户手机号"/>-->
-        <!--            </el-form-item>-->
-        <!--          </el-col>-->
-        <!--        </el-row>-->
         <el-row>
           <el-col :span="12">
             <el-form-item label="归属部门" prop="deptId">
@@ -246,7 +254,7 @@
               <el-radio-group v-model="form.gender">
                 <el-radio v-for="dict in sys_user_sex"
                           :key="dict.value"
-                          :label="dict.value">
+                          :label="parseInt(dict.value)">
                   {{ dict.label }}
                 </el-radio>
               </el-radio-group>
@@ -270,9 +278,6 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="线索简介">
-          <el-input v-model="form.info" placeholder="请输入线索简介"></el-input>
-        </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"/>
         </el-form-item>
@@ -288,9 +293,20 @@
 </template>
 
 <script setup name="Clue">
-import {addCourse, deleteCourse, getCourse, listCourse, updateCourse} from "@/api/tienchin/course";
-import {listActivities, listChannels, addClue, listClue, listUserList, assignClue} from "@/api/tienchin/clue";
+import {
+  addClue,
+  assignClue,
+  deleteClue,
+  getClueSummaryById,
+  listActivities,
+  listChannels,
+  listClue,
+  listOwnerList,
+  listUserList,
+  updateClue
+} from "@/api/tienchin/clue";
 import {deptTreeSelect} from "@/api/system/user";
+import useUserStore from "../../../store/modules/user";
 
 const router = useRouter();
 const {proxy} = getCurrentInstance();
@@ -298,8 +314,10 @@ const {sys_user_sex, clue_status} = proxy.useDict("sys_user_sex", "clue_status")
 
 
 const clueList = ref([]);
+const userStore = useUserStore();
 const channelList = ref([]);
 const userList = ref([]);
+const ownerList = ref([]);
 const activityList = ref([]);
 const open = ref(false);
 const assignClueOpen = ref(false);
@@ -318,11 +336,12 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    courseName: undefined,
-    apply: undefined,
-    type: undefined,
-    minPrice: undefined,
-    maxPrice: undefined
+    customerName: undefined,
+    status: undefined,
+    phoneNumber: undefined,
+    owner: undefined,
+    channelId: undefined,
+    dateRange: undefined
   },
   rules: {
     customerName: [{required: true, message: "客户姓名不能为空", trigger: "blur"}],
@@ -339,7 +358,7 @@ const {queryParams, form, assignForm, rules, assignRules} = toRefs(data);
 /** 查线索位列表 */
 function getList() {
   loading.value = true;
-  listClue(queryParams.value).then(response => {
+  listClue(proxy.addDateRange(queryParams.value, queryParams.value.dateRange)).then(response => {
     clueList.value = response.rows;
     total.value = response.total;
     loading.value = false;
@@ -444,7 +463,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.courseId);
+  ids.value = selection.map(item => item.clueId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
@@ -459,12 +478,15 @@ function handleAdd() {
 }
 
 /** 修改按钮操作 */
-function handleUpdate(row) {
+function handleUpdate() {
   reset();
   getChannelList();
-  const courseId = row.courseId || ids.value;
-  getCourse(courseId).then(response => {
+  const clueId = ids.value;
+  getClueSummaryById(clueId).then(response => {
     form.value = response.data;
+    listActivities(response.data.channelId).then(response => {
+      activityList.value = response.data;
+    })
     open.value = true;
     title.value = "修改线索";
   });
@@ -474,6 +496,7 @@ function handleUpdate(row) {
 function handleClueView(data) {
   router.push("/clue/details/index/" + data.clueId + "/view")
 }
+
 /** 查看线索按钮操作 */
 function handleClueFollow(data) {
   router.push("/clue/details/index/" + data.clueId + "/follow")
@@ -492,8 +515,8 @@ function handleClueAssign(row) {
 function submitForm() {
   proxy.$refs["clueRef"].validate(valid => {
     if (valid) {
-      if (form.value.courseId != undefined) {
-        updateCourse(form.value).then(response => {
+      if (form.value.clueId != undefined) {
+        updateClue(form.value).then(response => {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
@@ -511,9 +534,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const courseIds = row.courseId || ids.value;
-  proxy.$modal.confirm('是否确认删除线索id为"' + courseIds + '"的数据项？').then(function () {
-    return deleteCourse(courseIds);
+  const clueIds = ids.value;
+  proxy.$modal.confirm('是否确认删除线索id为"' + clueIds + '"的数据项？').then(function () {
+    return deleteClue(clueIds);
   }).then(() => {
     getList();
     proxy.$modal.msgSuccess("删除成功");
@@ -544,5 +567,13 @@ function channelChange(channelId) {
   });
 }
 
+function initOwnerList() {
+  listOwnerList().then(response => {
+    ownerList.value = response.data;
+  })
+}
+
+initOwnerList();
+getChannelList()
 getList();
 </script>

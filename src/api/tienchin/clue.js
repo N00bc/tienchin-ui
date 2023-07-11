@@ -26,10 +26,11 @@ export function addClue(data) {
 }
 
 // 列出线索列表
-export function listClue() {
+export function listClue(query) {
     return request({
-        url: "/tienchin/clue/list",
-        method: 'get'
+        url: '/tienchin/clue/list',
+        method: 'get',
+        params: query
     })
 }
 
@@ -41,12 +42,45 @@ export function listUserList(deptId) {
     })
 }
 
+// 展示所有用户
+export function listOwnerList() {
+    return request({
+        url: '/tienchin/clue/owner',
+        method: 'get'
+    })
+}
+
 // 创建分派线索
 export function assignClue(data) {
     return request({
         url: '/tienchin/assign',
         method: 'post',
         data: data
+    })
+}
+
+// 获取ClueSummary
+export function getClueSummaryById(clueId) {
+    return request({
+        url: '/tienchin/clue/summary/' + clueId,
+        method: 'get'
+    })
+}
+
+// 更新Clue
+export function updateClue(data) {
+    return request({
+        url: '/tienchin/clue',
+        method: 'put',
+        data: data
+    })
+}
+
+// 删除Clue
+export function deleteClue(clueIds) {
+    return request({
+        url: '/tienchin/clue/' + clueIds,
+        method: 'delete'
     })
 }
 
