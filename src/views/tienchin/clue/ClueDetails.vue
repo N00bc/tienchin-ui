@@ -46,7 +46,8 @@
                 <el-col :span="8">
                   <el-button type="danger" :disabled="isFieldDisabledEdit" @click="showInvalidateDialog">无效线索
                   </el-button>
-                  <el-button type="primary" :disabled="isFieldDisabledEdit">转为商机</el-button>
+                  <el-button type="primary" :disabled="isFieldDisabledEdit" @click="handleClue2Business">转为商机
+                  </el-button>
                 </el-col>
               </el-row>
             </div>
@@ -213,7 +214,7 @@
 </template>
 
 <script setup name="ClueDetails">
-import {getClueById, updateClueDetails, getFollowRecordByClueId, invalidClue} from "@/api/tienchin/clue"
+import {getClueById, updateClueDetails, getFollowRecordByClueId, invalidClue, clue2business} from "@/api/tienchin/clue"
 import {getCurrentInstance, onMounted, reactive} from "vue";
 
 const router = useRouter()
@@ -284,6 +285,18 @@ function initFollowRecordByClueId(clueId) {
 function showInvalidateDialog() {
   invalidateClueDialog.value = true;
   resetInvalidateClueForm();
+}
+
+/** 将线索转换为商机 */
+function handleClue2Business() {
+  let clueId = clueDetail.value.clueId
+  proxy.$modal.confirm('是否确认将id为"' + clueId + '"的线索转为商机？').then(function () {
+    return clue2business(clueId);
+  }).then(() => {
+    getList();
+    proxy.$modal.msgSuccess("转换成功");
+  }).catch(() => {
+  });
 }
 
 /** 提交`无效线索`原因 */

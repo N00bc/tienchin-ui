@@ -399,6 +399,7 @@ function assignUserChange(data) {
 function handleClueFormSubmit() {
   proxy.$refs["assignClueRef"].validate(valid => {
     if (valid) {
+      assignForm.value.type = 1;
       assignClue(assignForm.value).then(response => {
         proxy.$modal.msgSuccess("修改成功");
         resetAssignClue();

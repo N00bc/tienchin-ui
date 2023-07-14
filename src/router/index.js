@@ -172,6 +172,20 @@ export const dynamicRoutes = [
             }
         ]
     },
+    {
+        path: '/business/details',
+        component: Layout,
+        hidden: true,
+        permissions: ['tienchin:business:view','tienchin:business:assign'],
+        children: [
+            {
+                path: 'index/:businessId(\\d+)/:type(\\S+)', // /clue/details/index/{clueId}/{type}
+                component: () => import('@/views/tienchin/business/BusinessDetails.vue'),
+                name: 'BusinessDetails',
+                meta: {title: '商机详情', activeMenu: '/business'} //activeMenu: 激活菜单
+            }
+        ]
+    },
 ]
 
 const router = createRouter({

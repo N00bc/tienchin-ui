@@ -105,7 +105,7 @@ export function updateClueDetails(data) {
 // 查询线索的跟进记录
 export function getFollowRecordByClueId(clueId) {
     return request({
-        url: '/tienchin/clue/follow/record/' + clueId,
+        url: '/tienchin/follow/record/clue/' + clueId,
         method: 'get'
     })
 }
@@ -116,5 +116,13 @@ export function invalidClue(data) {
         url: '/tienchin/clue/invalidate',
         method: 'put',
         data: data
+    })
+}
+
+// ---------------------------- Business ----------------------------
+export function clue2business(clueId) {
+    return request({
+        url: '/tienchin/clue/business/' + clueId,
+        method: 'put'
     })
 }
