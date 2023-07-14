@@ -297,7 +297,7 @@ import {
   listActivities,
   listBusiness,
   listChannels,
-  updateBusiness
+  updateBusiness, getBusinessSummaryById
 } from "@/api/tienchin/business";
 import {deptTreeSelect} from "@/api/system/user";
 import useUserStore from "../../../store/modules/user";
@@ -453,6 +453,7 @@ function handleQuery() {
 /** 重置按钮操作 */
 function resetQuery() {
   proxy.resetForm("queryRef");
+  queryParams.value.dateRange = undefined
   handleQuery();
 }
 
@@ -528,7 +529,7 @@ function submitForm() {
 }
 
 /** 删除按钮操作 */
-function handleDelete(row) {
+function handleDelete() {
   const businessIds = ids.value;
   proxy.$modal.confirm('是否确认删除商机id为"' + businessIds + '"的数据项？').then(function () {
     return deleteBusiness(businessIds);
