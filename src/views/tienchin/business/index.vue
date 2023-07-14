@@ -290,23 +290,14 @@
 </template>
 
 <script setup name="Business">
+import {listOwnerList, listUserList} from "@/api/tienchin/clue";
 import {
-  addClue,
-  assignClue,
-  deleteClue,
-  getClueSummaryById,
-  listClue,
-  listOwnerList,
-  listUserList,
-  updateClue
-} from "@/api/tienchin/clue";
-import {
-  listBusiness,
-  listActivities,
-  listChannels,
   addBusiness,
-  updateBusiness,
-  assignBusiness
+  assignBusiness,
+  listActivities,
+  listBusiness,
+  listChannels,
+  updateBusiness
 } from "@/api/tienchin/business";
 import {deptTreeSelect} from "@/api/system/user";
 import useUserStore from "../../../store/modules/user";

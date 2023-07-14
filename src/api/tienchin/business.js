@@ -117,20 +117,3 @@ export function getFollowRecordByBusinessId(businessId) {
         method: 'get'
     })
 }
-
-//
-export function invalidBusiness(data) {
-    return request({
-        url: '/tienchin/business/invalidate',
-        method: 'put',
-        data: data
-    })
-}
-
-// ---------------------------- Business ----------------------------
-export function business2business(businessId) {
-    return request({
-        url: '/tienchin/business/business/' + businessId,
-        method: 'put'
-    })
-}

@@ -170,7 +170,7 @@
                 <el-col :span="8">
                   <div style="font-style: italic;font-weight: bold">其他意向</div>
                   <div>
-                    <el-input :disabled="isFieldDisabledEdit" v-model="businessDetail.othenIntention"></el-input>
+                    <el-input :disabled="isFieldDisabledEdit" v-model="businessDetail.otherIntention"></el-input>
                   </div>
                 </el-col>
               </el-row>
@@ -274,15 +274,11 @@
 </template>
 
 <script setup name="BusinessDetails">
-import {
-  regionData,
-  codeToText, pcaTextArr
-} from "element-china-area-data";
+import {pcaTextArr} from "element-china-area-data";
 import {
   getBusinessDetailsById,
-  getFollowRecordByBusinessId,
-  invalidBusiness,
   getCourseByCourseType,
+  getFollowRecordByBusinessId,
   updateBusinessDetails
 } from "@/api/tienchin/business"
 import {getCurrentInstance, onMounted, reactive} from "vue";
@@ -308,13 +304,10 @@ const data = reactive({
   }
 })
 
-const {invalidateBusinessForm, invalidateBusinessFormRules} = toRefs(data)
-
 const type = ref("")
 const businessDetail = ref({})
 const recordList = ref([])
 const courseList = ref([])
-const invalidateBusinessDialog = ref(false);
 const isFieldDisabledEdit = ref(false);
 
 onMounted(() => {
@@ -331,6 +324,10 @@ onMounted(() => {
 function initBusinessDetail(businessId) {
   getBusinessDetailsById(businessId).then(response => {
     businessDetail.value = response.data;
+    businessDetail.value.address = [];
+    businessDetail.value.address[0] = response.data.province
+    businessDetail.value.address[1] = response.data.city
+    businessDetail.value.address[2] = response.data.area
     // 如果是'view'或4 那么无法编辑
     isFieldDisabledEdit.value = isFieldDisabledEdit.value || businessDetail.value.status == 4;
   })
@@ -356,9 +353,6 @@ function courseTypeChange(type) {
 function handleBusinessDetailSubmit() {
   if (businessDetail.value.record1 && businessDetail.value.record2) {
     businessDetail.value.info = "[" + businessDetail.value.record1 + "]" + businessDetail.value.record2;
-    console.log(businessDetail.value.info)
-  } else {
-    return;
   }
   businessDetail.value.province = businessDetail.value.address[0]
   businessDetail.value.city = businessDetail.value.address[1]
@@ -375,40 +369,6 @@ function initFollowRecordByBusinessId(businessId) {
   })
 }
 
-/** 展示无效商机dialog */
-function showInvalidateDialog() {
-  invalidateBusinessDialog.value = true;
-  resetInvalidateBusinessForm();
-}
-
-
-/** 提交`无效商机`原因 */
-function handleInvalidateBusinessForm() {
-  proxy.$refs["invalidateBusinessRef"].validate(valid => {
-    if (valid) {
-      // 拼接record
-      businessDetail.value.record = invalidateBusinessForm.value.reason + ":" + (invalidateBusinessForm.value.remark ? invalidateBusinessForm.value.remark : '')
-      invalidBusiness(businessDetail.value).then(response => {
-        invalidateBusinessDialog.value = false;
-        router.go(-1)
-      })
-    }
-  })
-}
-
-/** 关闭`无效商机`dialog */
-function cancelInvalidateBusinessDialog() {
-  resetInvalidateBusinessForm();
-  invalidateBusinessDialog.value = false;
-}
-
-/** 清除表单数据 */
-function resetInvalidateBusinessForm() {
-  invalidateBusinessForm.value = {
-    reason: undefined,
-    remark: undefined
-  }
-}
 
 </script>
 
