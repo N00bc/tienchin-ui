@@ -183,7 +183,7 @@
                 <el-option
                     v-for="user in userList"
                     :key="user.userId"
-                    :value="{userId:user.userId,nickName:user.nickName,deptId:user.deptId,userName:user.userName}"
+                    :value="{value:user.userId,nickName:user.nickName,deptId:user.deptId,userName:user.userName}"
                     :label="user.nickName"/>
               </el-select>
             </el-form-item>
@@ -384,7 +384,7 @@ function initUserList(deptId) {
 /** 打开表单时赋值操作  */
 function assignUserChange(data) {
   assignForm.value.nickName = data.nickName
-  assignForm.value.userId = data.userId
+  assignForm.value.userId = data.value
   assignForm.value.userName = data.userName
   assignForm.value.deptId = data.deptId
 }
