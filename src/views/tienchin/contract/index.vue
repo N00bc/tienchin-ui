@@ -75,7 +75,7 @@
             plain
             icon="Plus"
             @click="handleAdd"
-            v-hasPermi="['tienchin:constract:add']"
+            v-hasPermi="['tienchin:contract:add']"
         >新增
         </el-button>
       </el-col>
@@ -86,7 +86,7 @@
             icon="Edit"
             :disabled="single"
             @click="handleUpdate"
-            v-hasPermi="['tienchin:constract:edit']"
+            v-hasPermi="['tienchin:contract:edit']"
         >修改
         </el-button>
       </el-col>
@@ -97,7 +97,7 @@
             icon="Delete"
             :disabled="multiple"
             @click="handleDelete"
-            v-hasPermi="['tienchin:constract:remove']"
+            v-hasPermi="['tienchin:contract:remove']"
         >删除
         </el-button>
       </el-col>
@@ -107,63 +107,88 @@
             plain
             icon="Download"
             @click="handleExport"
-            v-hasPermi="['tienchin:constract:export']"
+            v-hasPermi="['tienchin:contract:export']"
         >导出
         </el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
-    <!--合同列表-->
-    <el-table v-loading="loading" :data="businessList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="客户姓名" align="center" prop="customerName" width="120" :show-overflow-tooltip="true"/>
-      <el-table-column label="客户手机号" align="center" prop="phoneNumber" width="120" :show-overflow-tooltip="true"/>
-      <el-table-column label="合同状态" align="center" prop="status" width="120" :show-overflow-tooltip="true">
-        <template #default="scope">
-          <dict-tag :options="business_status" :value="scope.row.status">
-            {{ scope.row }}
-          </dict-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="合同归属人" align="center" prop="owner" width="120" :show-overflow-tooltip="true"/>
-      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.createTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="下次跟进时间" align="center" prop="nextTime" width="180">
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.nextTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleBusinessView(scope.row)"
-                     v-hasPermi="['tienchin:constract:view']">查看
-          </el-button>
-          <el-button link v-if="scope.row.status == 1"
-                     type="primary" icon="Pointer" @click="handleBusinessAssign(scope.row)"
-                     v-hasPermi="['tienchin:constract:edit']">分配
-          </el-button>
-          <el-button link v-if="scope.row.owner == userStore.name &&(scope.row.status == 1 || scope.row.status == 2)"
-                     type="primary" icon="DArrowRight"
-                     @click="handleBusinessFollow(scope.row)"
-                     v-hasPermi="['tienchin:constract:follow']">跟进
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <pagination
-        v-show="total > 0"
-        :total="total"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-    />
+    <!--待提交任务列表列表-->
+    <div>
+      <el-tag>待审批任务列表</el-tag>
+      <el-table v-loading="loading" :data="unapproveTaskList" @selection-change="handleSelectionChange" :row-class-name="taskStyle">
+        <el-table-column type="selection" width="55" align="center"/>
+        <el-table-column label="客户姓名" align="center" prop="customerName" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="客户手机号" align="center" prop="phoneNumber" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="课程名称" align="center" prop="courseName" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="合同价格" align="center" prop="contractPrice" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="渠道名称" align="center" prop="channelName" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="活动名称" align="center" prop="activityName" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <template #default="scope">
+            <el-button link type="primary" icon="View" @click="handleContractView(scope.row)"
+                       v-hasPermi="['tienchin:contract:detail']">查看
+            </el-button>
+            <el-button link
+                       type="primary" icon="Document" @click="handleContractPdfView(scope.row)"
+                       v-hasPermi="['tienchin:contract:view']">预览
+            </el-button>
+            <el-button link
+                       type="primary" icon="Check"
+                       @click="handleApprove(scope.row)"
+                       v-hasPermi="['tienchin:contract:approve']">审批
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <pagination
+          v-show="total > 0"
+          :total="total"
+          v-model:page="queryParams.pageNum"
+          v-model:limit="queryParams.pageSize"
+          @pagination="getList"
+      />
+    </div>
+    <el-divider/>
+    <!--已提交任务列表列表-->
+    <div style="margin-top: 30px">
+      <el-tag type="success">已审提交务列表</el-tag>
+      <el-table v-loading="loading" :data="committedTaskList" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center"/>
+        <el-table-column label="客户姓名" align="center" prop="customerName" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="客户手机号" align="center" prop="phoneNumber" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="课程名称" align="center" prop="courseName" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="合同价格" align="center" prop="contractPrice" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="渠道名称" align="center" prop="channelName" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="活动名称" align="center" prop="activityName" width="120" :show-overflow-tooltip="true"/>
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <template #default="scope">
+            <el-button link type="primary" icon="View" @click="handleContractView(scope.row)"
+                       v-hasPermi="['tienchin:contract:detail']">查看
+            </el-button>
+            <el-button link
+                       type="primary" icon="Document" @click="handleContractPdfView(scope.row)"
+                       v-hasPermi="['tienchin:contract:view']">预览
+            </el-button>
+            <el-button link
+                       type="primary" icon="Check"
+                       @click="handleApprove(scope.row)"
+                       v-hasPermi="['tienchin:contract:approve']">审批
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <pagination
+          v-show="total > 0"
+          :total="total"
+          v-model:page="queryParams.pageNum"
+          v-model:limit="queryParams.pageSize"
+          @pagination="getList"
+      />
+    </div>
     <!-- 分配合同对话框 -->
     <el-dialog title="分配合同" v-model="assignBusinessOpen" width="600px" append-to-body>
-      <el-form ref="assignBusinessRef" :model="form" :rules="assignRules" label-width="80px">
+      <el-form ref="contractDetailRef" :model="form" :rules="assignRules" label-width="80px">
         <el-row>
           <el-col :span="12">
             <el-form-item label="归属部门" prop="deptId">
@@ -192,8 +217,129 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="handleBusinessFormSubmit">确认分派</el-button>
-          <el-button @click="cancelBusinessAssign">取消分派</el-button>
+          <el-button type="primary" @click="handleBusinessFormSubmit">确定</el-button>
+          <el-button @click="cancelBusinessAssign">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+    <!--审批-->
+    <el-dialog title="审批" v-model="contractApproveInfoOpen" width="600px" append-to-body>
+      <el-form ref="contractApproveInfoRef" :model="form" :rules="assignRules" label-width="80px">
+        <div>
+          <el-tag>原因</el-tag>
+          <el-input placeholder="快速审批" v-model="contractApproveInfo.reason"></el-input>
+        </div>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="danger" @click="handleApproveOrReject(false)">拒绝</el-button>
+          <el-button type="primary" @click="handleApproveOrReject(true)">同意审批</el-button>
+        </div>
+      </template>
+    </el-dialog>
+    <!--查看合同对话框-->
+    <el-dialog title="合同详情" v-model="showContractDetailOpen" width="600px" append-to-body>
+      <el-row :gutter="8">
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">合同编号</div>
+            <div style="color: #8392a6">{{ contractDetails.contractId }}</div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">客户名</div>
+            <div style="color: #8392a6">{{ contractDetails.customerName }}</div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">客户手机号</div>
+            <div style="color: #8392a6">{{ contractDetails.phoneNumber }}</div>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="8">
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">课程分类</div>
+            <div style="color: #8392a6">
+              <template v-for="type in course_type">
+                <template v-if="type.value == contractDetails.type">
+                  {{ type.label }}
+                </template>
+              </template>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">课程名</div>
+            <div style="color: #8392a6">{{ contractDetails.courseName }}</div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">活动名称</div>
+            <div style="color: #8392a6">{{ contractDetails.activityName }}</div>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="8">
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">渠道名称</div>
+            <div style="color: #8392a6">{{ contractDetails.channelName }}</div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">合同状态</div>
+            <div style="color: #8392a6">
+              <template v-for="status in contract_status">
+                <template v-if="status.value == contractDetails.status">
+                  {{ status.label }}
+                </template>
+              </template>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">合同金额</div>
+            <div style="color: #8392a6">{{ contractDetails.contractPrice }}</div>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="8">
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">课程价格</div>
+            <div style="color: #8392a6">{{ contractDetails.coursePrice }}</div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">折扣类型</div>
+            <div style="color: #8392a6">
+              <template v-for="type in activity_type">
+                <template v-if="type.value == contractDetails.discountType">
+                  {{ type.label }}
+                </template>
+              </template>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div>
+            <div style="font-weight: bold">合同审批人</div>
+            <div style="color: #8392a6">{{ contractDetails.approveUserName }}</div>
+          </div>
+        </el-col>
+      </el-row>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="closeContractDetails">关闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -208,7 +354,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="手机号" prop="phoneNumber">
-              <el-input v-model="form.phoneNumber" placeholder="请输入用户手机号"/>
+              <el-input v-model="form.phoneNumber" placeholder="请输入用户手机号" @input="handlePhoneNumberInput"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -338,41 +484,66 @@
         </div>
       </template>
     </el-dialog>
+    <!--预览pdf对话框-->
+    <el-dialog :title="title" v-model="showPdfOpen" append-to-body>
+      <div>
+        <vue-pdf-embed :source="pdfSource"/>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="closePDF">取 消</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="Business">
 import {getToken} from '@/utils/auth'
+import {assignBusiness, getBusinessSummaryById, listActivities, listChannels,} from "@/api/tienchin/business";
 import {
-  assignBusiness,
-  listActivities,
-  listBusiness,
-  listChannels,
-  getBusinessSummaryById,
-} from "@/api/tienchin/business";
-import {
-  getCourseByCourseType, removeContractFile, updateContract, addContract, listOwnerList, listUserList
+  addContract,
+  getContractById,
+  getCourseByCourseType,
+  getCustomerNameByPhoneNumber,
+  getUnapproveTask,
+  listOwnerList,
+  listUserList,
+  removeContractFile,
+  updateContract,
+  getContractPdf,
+  getCommittedTask,
+  approveOrReject
 } from "@/api/tienchin/contract";
 import {deptTreeSelect} from "@/api/system/user";
 import useUserStore from "../../../store/modules/user";
+import VuePdfEmbed from 'vue-pdf-embed'
 
 const router = useRouter();
 const {proxy} = getCurrentInstance();
 const {
   business_status,
-  course_type
-} = proxy.useDict("business_status", "course_type");
+  course_type,
+  contract_status,
+  activity_type
+} = proxy.useDict("business_status", "course_type", "contract_status", "activity_type");
 
 
-const businessList = ref([]);
+const unapproveTaskList = ref([]);
+const committedTaskList = ref([]);
 const userStore = useUserStore();
+const contractDetails = ref({});
+const contractApproveInfo = ref({});
 const channelList = ref([]);
 const courseList = ref([]);
 const userList = ref([]);
 const ownerList = ref([]);
 const activityList = ref([]);
 const open = ref(false);
+const showPdfOpen = ref(false);
 const assignBusinessOpen = ref(false);
+const contractApproveInfoOpen = ref(false);
+const showContractDetailOpen = ref(false);
 const deptOptions = ref(undefined);
 const loading = ref(true);
 const showSearch = ref(true);
@@ -381,6 +552,7 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
+const pdfSource = ref("");
 const headerObj = ref({
   "Authorization": 'Bearer ' + getToken()
 })
@@ -441,6 +613,29 @@ function handleCourseChange(data) {
 }
 
 /**
+ * 新增合同时查询是否存在用户记录
+ * @param phoneNumber
+ */
+function handlePhoneNumberInput(phoneNumber) {
+  if (phoneNumber.length == 11) {
+    getCustomerNameByPhoneNumber(phoneNumber).then(response => {
+      form.value.customerName = response.msg
+    })
+  }
+}
+
+/**
+ * `查看`按钮逻辑
+ * @param data
+ */
+function handleContractView(data) {
+  showContractDetailOpen.value = true;
+  getContractById(data.contractId).then(response => {
+    contractDetails.value = response.data;
+  })
+}
+
+/**
  * 上传成功回调
  * @param response
  * @param uploadFile
@@ -460,13 +655,22 @@ function handleActivityChange(data) {
 }
 
 /** 查合同位列表 */
-function getList() {
+function initUnapproveList() {
   loading.value = true;
-  listBusiness(proxy.addDateRange(queryParams.value, queryParams.value.dateRange)).then(response => {
-    businessList.value = response.rows;
+  getUnapproveTask(proxy.addDateRange(queryParams.value, queryParams.value.dateRange)).then(response => {
+    unapproveTaskList.value = response.rows;
     total.value = response.total;
     loading.value = false;
   });
+}
+
+/**
+ * 查询已提交但未审批的任务
+ */
+function initCommittedList() {
+  getCommittedTask().then(response => {
+    committedTaskList.value = response.rows
+  })
 }
 
 /** 获取部门数据 */
@@ -502,24 +706,22 @@ function approveUserChange(data) {
 
 /** 提交分派记录操作 */
 function handleBusinessFormSubmit() {
-  proxy.$refs["assignBusinessRef"].validate(valid => {
+  proxy.$refs["contractDetailRef"].validate(valid => {
     if (valid) {
       form.value.type = 2;
       assignBusiness(form.value).then(response => {
         proxy.$modal.msgSuccess("修改成功");
         resetAssignBusiness();
         assignBusinessOpen.value = false;
-        getList();
+        initUnapproveList();
       })
     }
   });
 }
 
 /** 取消分派操作 */
-function cancelBusinessAssign() {
-  assignBusinessOpen.value = false;
-  // 重置分派表单
-  resetAssignBusiness();
+function closeContractDetails() {
+  showContractDetailOpen.value = false;
 }
 
 /** 取消按钮 */
@@ -565,7 +767,7 @@ function reset() {
 /** 搜索按钮操作 */
 function handleQuery() {
   queryParams.value.pageNum = 1;
-  getList();
+  initUnapproveList();
 }
 
 /** 重置按钮操作 */
@@ -612,9 +814,29 @@ function handleBusinessView(data) {
   router.push("/business/details/index/" + data.businessId + "/view")
 }
 
-/** 查看合同按钮操作 */
-function handleBusinessFollow(data) {
-  router.push("/business/details/index/" + data.businessId + "/follow")
+/**
+ * 打开审批对话框
+ * @param data
+ */
+function handleApprove(data) {
+  contractApproveInfoOpen.value = true;
+  contractApproveInfo.value = JSON.parse(JSON.stringify(data));
+}
+
+/**
+ * 是否同意
+ * @param approve
+ */
+function handleApproveOrReject(approve) {
+  contractApproveInfo.value.approve = approve;
+  if (!approve) {
+    proxy.$message.error('请输入拒绝理由')
+    return;
+  }
+  approveOrReject(contractApproveInfo.value).then(response => {
+    contractApproveInfoOpen.value = false;
+    initUnapproveList();
+  })
 }
 
 /** 提交按钮 */
@@ -625,13 +847,13 @@ function submitForm() {
         updateContract(form.value).then(response => {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
-          getList();
+          initUnapproveList();
         });
       } else {
         addContract(form.value).then(response => {
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
-          getList();
+          initUnapproveList();
         });
       }
     }
@@ -644,7 +866,7 @@ function handleDelete() {
   proxy.$modal.confirm('是否确认删除合同id为"' + businessIds + '"的数据项？').then(function () {
     return deleteBusiness(businessIds);
   }).then(() => {
-    getList();
+    initUnapproveList();
     proxy.$modal.msgSuccess("删除成功");
   }).catch(() => {
   });
@@ -683,8 +905,39 @@ function initOwnerList() {
     ownerList.value = response.data;
   })
 }
+function taskStyle({row}){
+  if(row.reason){
+    return 'red-bg'
+  }
+}
+/**
+ * 展示pdf预览数据
+ * @param data
+ */
+function handleContractPdfView(data) {
+
+  let path = data.filePath.split("/contract/")[1];
+  console.log(path)
+  getContractPdf(path).then(response => {
+    pdfSource.value = 'data:application/pdf;base64,' + response.msg;
+    showPdfOpen.value = true;
+  })
+}
+
+/**
+ * 关闭pdf预览
+ */
+function closePDF() {
+  showPdfOpen.value = false;
+}
 
 initOwnerList();
+initCommittedList();
 getChannelList()
-getList();
+initUnapproveList();
 </script>
+<style>
+.el-table .red-bg{
+  background: #a62210 ;
+}
+</style>

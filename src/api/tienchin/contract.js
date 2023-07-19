@@ -35,6 +35,7 @@ export function updateContract(data) {
         data: data
     })
 }
+
 // 展示部门用户
 export function listUserList(deptId) {
     return request({
@@ -48,5 +49,54 @@ export function listOwnerList() {
     return request({
         url: '/tienchin/contract/owner',
         method: 'get'
+    })
+}
+
+// 根据客户手机号查找客户姓名
+export function getCustomerNameByPhoneNumber(phoneNumber) {
+    return request({
+        url: '/tienchin/contract/customer/' + phoneNumber,
+        method: 'get'
+    })
+}
+
+// 查询当前用户待审批
+export function getUnapproveTask() {
+    return request({
+        url: '/tienchin/contract/unapprove',
+        method: 'get'
+    })
+}
+
+// 查看选中列详细信息
+export function getContractById(contractId) {
+    return request({
+        url: '/tienchin/contract/view/' + contractId,
+        method: 'get'
+    })
+}
+
+// 预览pdf
+export function getContractPdf(filePath) {
+    return request({
+        url: '/tienchin/contract/pdf/' + filePath,
+        method: 'get'
+    })
+}
+
+// 获取提交但未审批的任务
+export function getCommittedTask() {
+    return request({
+        url: '/tienchin/contract/committedTask',
+        method: 'get'
+    })
+}
+
+// 审批任务
+export function approveOrReject(data) {
+    return request({
+        url: '/tienchin/contract/approve',
+        data: data,
+        method: 'post'
     })
 }
